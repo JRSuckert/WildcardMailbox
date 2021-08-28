@@ -1,0 +1,13 @@
+AWSTemplateFormatVersion : "2010-09-09"
+Description : "",
+
+Resources:
+  S3Bucket:
+    Type: "AWS::S3::Bucket",
+    Properties:
+    DeletionPolicy: "Retain"
+
+// TODO 
+// - Check S3 Properties
+// - SES Setup ? SES Ruleset
+// Route53 Setup?
