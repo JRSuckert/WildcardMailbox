@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"strings"
@@ -45,7 +46,23 @@ func ListObjects() {
 		return
 	}
 
+	joinedKey := ""
 	for key, element := range box {
 		fmt.Println(key, element)
+		joinedKey = strings.Join([]string{key, element.Mails[0]}, "")
 	}
+
+	obj, err := client.GetObject(&s3.GetObjectInput{
+		Bucket: &bucket,
+		Key:    &joinedKey,
+	})
+
+	if err == nil {
+		buf := new(bytes.Buffer)
+		buf.ReadFrom(obj.Body)
+		newStr := buf.String()
+
+		fmt.Printf(newStr)
+	}
+
 }
