@@ -1,31 +1,40 @@
 var AWS = require('aws-sdk');
 var s3 = new AWS.S3();
- 
-var bucketName = 'mail-leswile.de';
+// Create DynamoDB document client
+var docClient = new AWS.DynamoDB.DocumentClient({apiVersion: '2012-08-10'});
+
+var bucketName = process.env.BUCKET_NAME;
+var domain = process.env.DOMAIN;
  
 exports.handler = function(event, context, callback) {
-    var sesNotification = event.Records[0].ses;
-    console.log("SES Notification:\n", JSON.stringify(sesNotification, null, 2));
-    const base = sesNotification.mail.destination.filter(address => address.endsWith("@leswile.de"))[0]
-    const folder = sesNotification.mail.source;
-    const subject = encodeURI(sesNotification.mail.commonHeaders.subject);
-    const id = sesNotification.mail.messageId;
-    var params = {
-        Bucket: bucketName, 
-        CopySource: "/mail-leswile.de/"+id, 
-        Key: base + "/" + folder + "/" + subject + "-" + id + ".eml"
-    };
-    s3.copyObject(params, function(err, data) {
-        if (err) console.log(err, err.stack); // an error occurred
-        else {
-            var params = {
-                Bucket: bucketName, 
-                Key: id
-            };
-            s3.deleteObject(params, function(err, data) {
-                if (err) console.log(err, err.stack); // an error occurred
-                else     console.log(data);           // successful response
-            });
-        }
+    event.Records.foreach(record => {
+        var sesNotification = record.ses;
+        const base = sesNotification.mail.destination.filter(address => address.endsWith(`@${domain}`))[0];
+        const folder = sesNotification.mail.source;
+        const subject = encodeURI(sesNotification.mail.commonHeaders.subject);
+        const id = sesNotification.mail.messageId;
+        // put id sender, receiver, subject into dynamoDB
+        // send notification to user
     });
+
+    
 };
+
+function putItem() {
+    var params = {
+    TableName: process.env.TABLE_NAME,
+    Item: {
+        'HASHKEY': VALUE,
+        'ATTRIBUTE_1': 'STRING_VALUE',
+        'ATTRIBUTE_2': VALUE_2
+    }
+    };
+
+    docClient.put(params, function(err, data) {
+    if (err) {
+        console.log("Error", err);
+    } else {
+        console.log("Success", data);
+    }
+    });
+}
